@@ -11,11 +11,21 @@ import hashlib
 import uvicorn
 from dotenv import load_dotenv
 from config import Settings
+from fastapi.middleware.cors import CORSMiddleware
 
 load_dotenv()
 
 app = FastAPI()
 settings = Settings()
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all methods
+    allow_headers=["*"],  # Allow all headers
+)
 
 class AddressList(BaseModel):
     addresses: List[str]
