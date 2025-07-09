@@ -6,7 +6,7 @@ import pandas as pd
 import requests
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.db import SessionLocal, daily_trash_cache_table
+from db import SessionLocal, daily_trash_cache_table
 
 async def get_trash_locations_from_api():
     url = "https://data.cityofnewyork.us/OData.svc/erm2-nwe9"

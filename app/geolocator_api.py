@@ -3,7 +3,7 @@ from sqlalchemy import Table, Column, String
 from sqlalchemy.exc import SQLAlchemyError
 from geopy.geocoders import Nominatim
 
-from app.db import metadata, SessionLocal  # Import from db.py
+from db import metadata, SessionLocal  # Import from db.py
 
 geolocator = Nominatim(user_agent="geolocator_app", timeout=10)
 

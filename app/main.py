@@ -5,9 +5,9 @@ from typing import List
 import asyncio
 import uvicorn
 
-from app.geolocator_api import get_coordinates_from_package, \
+from geolocator_api import get_coordinates_from_package, \
     get_cached_coordinates, cache_coordinates
-from app.trash_api import get_trash_locations_from_api, \
+from trash_api import get_trash_locations_from_api, \
     get_cached_trash_locations
 from config import Settings
 from fastapi.middleware.cors import CORSMiddleware
