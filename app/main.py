@@ -12,6 +12,9 @@ import uvicorn
 from dotenv import load_dotenv
 from config import Settings
 from fastapi.middleware.cors import CORSMiddleware
+import requests
+import xml.etree.ElementTree as ET
+import pandas as pd
 
 load_dotenv()
 
@@ -94,6 +97,49 @@ async def get_coords(address_list: AddressList):
     tasks = [sem_task(address) for address in address_list.addresses]
     results = await asyncio.gather(*tasks)
     return [{'address': addr, 'coordinates': coord} if coord else {'address': addr, 'error': 'Coordinates not found'} for addr, coord in zip(address_list.addresses, results)]
+
+@app.get("/get_trash_locations/")
+async def get_trash_locations():
+    url = "https://data.cityofnewyork.us/OData.svc/erm2-nwe9"
+    params = {
+        '$top': 10000,
+        '$orderby': 'created_date desc',
+        "$filter": "descriptor eq 'Trash'"
+    }
+    headers = {
+        'Accept': 'application/xml'  # Ask for XML
+    }
+
+    response = requests.get(url, params=params, headers=headers)
+    xml_data = response.text
+
+    ns = {
+        'atom': 'http://www.w3.org/2005/Atom',
+        'd': 'http://schemas.microsoft.com/ado/2007/08/dataservices',
+        'm': 'http://schemas.microsoft.com/ado/2007/08/dataservices/metadata'
+    }
+
+    root = ET.fromstring(xml_data)
+
+    records = []
+    for entry in root.findall('atom:entry', ns):
+        props = entry.find('atom:content/m:properties', ns)
+        if props is not None:
+            record = {}
+            for field in props:
+                # Strip the namespace from the tag
+                tag = field.tag.split('}', 1)[1]
+                record[tag] = field.text
+            records.append(record)
+
+
+    # Filter for status open
+    df = pd.DataFrame(records)
+    df = df[df.status != "Closed"]
+
+
+    results = df.apply(lambda x: {'address': x.incident_address, 'coordinates': {'longitude': x.longitude, 'latitude': x.latitude}}, axis=1).tolist()
+    return results
 
 if __name__ == "__main__":
     uvicorn.run(app, host=settings.HOST_URL, port=settings.HOST_PORT)
